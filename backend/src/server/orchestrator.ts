@@ -405,19 +405,35 @@ Produce a structured final report JSON matching this exact structure:
 }
 `;
 
+  const evals = Array.isArray(sessionData.answer_evaluations) ? sessionData.answer_evaluations : [];
+  
+  let avgScore = 50;
+  let avgConceptual = 50;
+  let avgTech = 50;
+  let avgReasoning = 50;
+
+  if (evals.length > 0) {
+    avgScore = Math.round(evals.reduce((sum: number, e: any) => sum + (Number(e.score) || 0), 0) / evals.length);
+    avgConceptual = Math.round(evals.reduce((sum: number, e: any) => sum + (Number(e.communication_score) || 0), 0) / evals.length);
+    avgTech = Math.round(evals.reduce((sum: number, e: any) => sum + (Number(e.technical_accuracy) || 0), 0) / evals.length);
+    avgReasoning = Math.round(evals.reduce((sum: number, e: any) => sum + (Number(e.reasoning_score) || 0), 0) / evals.length);
+  }
+
+  const technicalLevel = avgScore >= 80 ? "Strong AI Engineering Candidate" : avgScore >= 60 ? "Developing Practitioner" : "Foundational / Beginner";
+
   const fallbackFeedback = {
-    summary: `${candidate.name} demonstrated solid understanding across multiple AI engineering domains.`,
-    overallScore: 82,
-    technicalLevel: "Strong AI Engineering Candidate",
-    strengths: ["Understands fundamental concepts", "Articulates tool usage clearly"],
-    gaps: ["Could deepen trade-off analysis under extreme scale constraints"],
-    next: ["Practice fine-tuning datasets", "Build production observability dashboards"],
+    summary: avgScore >= 70 ? `${candidate.name} demonstrated solid understanding across multiple domains.` : `${candidate.name} struggled with several core concepts and needs further study.`,
+    overallScore: avgScore,
+    technicalLevel: technicalLevel,
+    strengths: state.strengths && state.strengths.length > 0 ? state.strengths.slice(0, 3) : ["Attempted all questions"],
+    gaps: state.weaknesses && state.weaknesses.length > 0 ? state.weaknesses.slice(0, 3) : ["General knowledge gaps across domains"],
+    next: ["Review fundamental curriculum concepts"],
     dimensions: {
-      conceptualUnderstanding: 85,
-      technicalDepth: 80,
-      systemDesign: 82,
-      reasoning: 84,
-      productionAwareness: 78
+      conceptualUnderstanding: avgConceptual,
+      technicalDepth: avgTech,
+      systemDesign: avgTech,
+      reasoning: avgReasoning,
+      productionAwareness: avgTech
     },
     topicScores: [],
     confidence: 0.88
