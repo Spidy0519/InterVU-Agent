@@ -1,0 +1,19 @@
+{
+    "include":  [
+                    "src/**/*",
+                    "server.ts"
+                ],
+    "exclude":  [
+                    "node_modules",
+                    "dist"
+                ],
+    "compilerOptions":  {
+                            "outDir":  "./dist",
+                            "strict":  false,
+                            "module":  "esnext",
+                            "moduleResolution":  "bundler",
+                            "skipLibCheck":  true,
+                            "esModuleInterop":  true,
+                            "target":  "ES2022"
+                        }
+}

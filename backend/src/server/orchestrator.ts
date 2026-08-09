@@ -11,7 +11,9 @@ import {
   TopicAssessed,
   AnswerEvaluation
 } from '../types/interview';
-import { CURRICULUM_DATA } from '../data/curriculum';
+import fs from "fs";
+import path from "path";
+const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../data/curriculum.json"), "utf8"));
 import { generateContentJSON, generateContentText } from './geminiService';
 
 export function createInitialStrategy(candidate: Candidate): InterviewStrategy {

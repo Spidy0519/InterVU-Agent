@@ -1,0 +1,28 @@
+{
+    "version":  "0.0.0",
+    "name":  "intervu-frontend",
+    "scripts":  {
+                    "preview":  "vite preview",
+                    "build":  "vite build",
+                    "dev":  "vite",
+                    "lint":  "tsc -b"
+                },
+    "devDependencies":  {
+                            "@types/react-dom":  "^19.0.3",
+                            "@types/react":  "^19.0.8",
+                            "typescript":  "~5.8.2"
+                        },
+    "type":  "module",
+    "dependencies":  {
+                         "@vitejs/plugin-react":  "^5.0.4",
+                         "react-dom":  "^19.0.1",
+                         "@tailwindcss/vite":  "^4.1.14",
+                         "react":  "^19.0.1",
+                         "tailwindcss":  "^4.1.14",
+                         "lucide-react":  "^0.546.0",
+                         "autoprefixer":  "^10.4.21",
+                         "motion":  "^12.23.24",
+                         "vite":  "^6.2.3"
+                     },
+    "private":  true
+}

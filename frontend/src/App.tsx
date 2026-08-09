@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { CandidateSelector } from './components/CandidateSelector';
 import { InterviewRules } from './components/InterviewRules';
@@ -6,13 +6,15 @@ import { InterviewSession } from './components/InterviewSession';
 import { EvaluationReport } from './components/EvaluationReport';
 import { CurriculumMap } from './components/CurriculumMap';
 import { ApiInspector } from './components/ApiInspector';
-import { Candidate, InterviewState, FinalFeedback } from './types/interview';
-import { CANDIDATES_DATA } from './data/candidates';
+import { Candidate, InterviewState } from './types/interview';
 import { generateSessionId } from './lib/utils';
+import CANDIDATES_DATA_RAW from '../../data/candidates.json';
+
+const CANDIDATES_DATA = CANDIDATES_DATA_RAW.candidates as Candidate[];
 
 export default function App() {
   const [candidates, setCandidates] = useState<Candidate[]>(CANDIDATES_DATA);
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(CANDIDATES_DATA[0]);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(CANDIDATES_DATA[0] || null);
   const [activeTab, setActiveTabState] = useState<'candidates' | 'rules' | 'interview' | 'report' | 'curriculum' | 'api'>('candidates');
   const [previousTab, setPreviousTab] = useState<'candidates' | 'rules' | 'interview' | 'report' | 'curriculum' | 'api'>('candidates');
 
@@ -34,15 +36,16 @@ export default function App() {
     fetch('/api/candidates')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setCandidates(data);
+        const cands = data.candidates || data;
+        if (Array.isArray(cands) && cands.length > 0) {
+          setCandidates(cands);
           if (!selectedCandidate) {
-            setSelectedCandidate(data[0]);
+            setSelectedCandidate(cands[0]);
           }
         }
       })
       .catch((err) => {
-        console.warn('Using local pre-seeded candidate data:', err);
+        console.warn('Failed to fetch candidate data:', err);
       });
   }, []);
 
@@ -68,7 +71,7 @@ export default function App() {
         throw new Error(`Server returned status ${response.status}`);
       }
 
-      const data = await response.json();
+      await response.json();
 
       // Fetch full initialized session object from backend
       const sessionRes = await fetch(`/api/session/${newSessionId}`);

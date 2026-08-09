@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Candidate } from '../types/interview';
-import { CURRICULUM_DATA } from '../data/curriculum';
+import CURRICULUM_DATA from '../../../data/curriculum.json';
 import { Search, Play, X, ChevronRight, CheckCircle } from 'lucide-react';
 
 interface CandidateSelectorProps {

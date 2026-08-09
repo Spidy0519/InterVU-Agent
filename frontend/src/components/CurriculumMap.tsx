@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { InterviewState } from '../types/interview';
-import { CURRICULUM_DATA } from '../data/curriculum';
-import { ChevronDown, ChevronRight, BookOpen, Layers, CheckCircle2, Wrench, Calendar, Sparkles } from 'lucide-react';
+import CURRICULUM_DATA from '../../../data/curriculum.json';
+import { ChevronDown, ChevronRight, BookOpen, CheckCircle2, Wrench, Calendar, Sparkles } from 'lucide-react';
 
 interface CurriculumMapProps {
   session?: InterviewState | null;

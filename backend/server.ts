@@ -1,9 +1,9 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
+import fs from "fs";
 import dotenv from "dotenv";
-import { CANDIDATES_DATA } from "./src/data/candidates";
-import { CURRICULUM_DATA } from "./src/data/curriculum";
+const CANDIDATES_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../data/candidates.json"), "utf8"));
+const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../data/curriculum.json"), "utf8"));
 import { interviewStore } from "./src/server/interviewStore";
 import { initializeInterview, processTurn, compileFinalFeedback } from "./src/server/orchestrator";
 import { Candidate } from "./src/types/interview";
@@ -144,15 +144,9 @@ async function startServer() {
     }
   });
 
-  // Vite middleware setup
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
+  // Vite middleware setup removed for standalone backend
+  if (process.env.NODE_ENV === "production") {
+    const distPath = path.join(process.cwd(), '../frontend/dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));

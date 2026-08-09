@@ -1,0 +1,23 @@
+{
+    "version": "0.0.0",
+    "name": "intervu-backend",
+    "scripts": {
+        "build": "esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+        "dev": "tsx server.ts",
+        "start": "node dist/server.js"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.21",
+        "@types/node": "^22.14.0",
+        "esbuild": "^0.28.2",
+        "tsx": "^4.21.0",
+        "typescript": "~5.8.2"
+    },
+    "type": "module",
+    "dependencies": {
+        "@google/genai": "^2.4.0",
+        "dotenv": "^17.2.3",
+        "express": "^4.21.2"
+    },
+    "private": true
+}
