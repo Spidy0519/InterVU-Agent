@@ -45,8 +45,15 @@ async function startServer() {
       return res.status(404).json({ error: "Interview session not found in DB" });
     }
     
-    const state = sessionData.interview_state[0];
-    const turns = sessionData.interview_turns;
+    let state = Array.isArray(sessionData.interview_state) 
+      ? sessionData.interview_state[0] 
+      : sessionData.interview_state;
+    
+    if (!state) {
+      state = { questions_asked: 0, curriculum_days_covered: [] };
+    }
+
+    const turns = sessionData.interview_turns || [];
     
     // Construct a mock structure for the UI if it expects history etc
     res.json({
