@@ -19,7 +19,7 @@ export default defineConfig(() => {
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
       proxy: {
         '/api': {
-          target: 'https://intervu-agent.onrender.com',
+          target: 'http://localhost:3000',
           changeOrigin: true
         }
       }
