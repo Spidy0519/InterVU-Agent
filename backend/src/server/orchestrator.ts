@@ -342,7 +342,7 @@ Return JSON matching:
     p_role: 'agent',
     p_content: reply,
     p_covers_day: nextCurriculumDay.day,
-    p_topic: nextGen.topic,
+    p_topic: nextGen.topic || nextCurriculumDay.title,
     p_question_type: 'conceptual' // Forced to pass DB check constraint
   });
   if (agentTurnErr) {
