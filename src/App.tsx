@@ -163,7 +163,7 @@ export default function App() {
   };
 
   return (
-    <div id="app-root-container" className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased flex flex-col selection:bg-sky-100">
+    <div id="app-root-container" className="m-0 p-0 min-h-screen w-full bg-slate-50 text-slate-900 font-sans antialiased flex flex-col selection:bg-sky-100">
       {/* Top Navbar & Sliding Drawer */}
       <Navbar
         activeTab={activeTab}
