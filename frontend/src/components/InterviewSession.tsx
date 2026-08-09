@@ -119,7 +119,7 @@ export const InterviewSession: React.FC<InterviewSessionProps> = ({
   const isTotalTimeExpired = totalTimeLeft === 0;
 
   return (
-    <div id="interview-session-container" className="space-y-4">
+    <div id="interview-session-container" className="space-y-4 pb-32">
       {/* Top Header Row: Back + Candidate Info on Left, Small Compact Timer on Top Right */}
       <div id="session-progress-card" className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-slate-200/80">
         {/* Left Section: Back Button + Candidate Info */}
@@ -272,7 +272,7 @@ export const InterviewSession: React.FC<InterviewSessionProps> = ({
 
         </div>
 
-        <div className="p-6 space-y-6 max-h-[500px] overflow-y-auto bg-white">
+        <div className="p-6 space-y-6 bg-white">
           {session.history.map((turn, index) => (
             <div key={turn.question.id || index} id={`transcript-turn-${index}`} className="space-y-6">
               {/* Interviewer Question Box */}
@@ -350,8 +350,8 @@ export const InterviewSession: React.FC<InterviewSessionProps> = ({
       {/* Answer Input Controls */}
       {session.status === 'in_progress' && (
         <div className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-slate-200 shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div id="answer-input-container" className="bg-slate-50 rounded-xl p-2 border border-slate-200">
+          <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+            <div id="answer-input-container" className="bg-white rounded-xl p-3 border border-slate-200 shadow-xs">
               <form onSubmit={handleSubmit} className="space-y-0">
                 <textarea
                   id="candidate-answer-textarea"
