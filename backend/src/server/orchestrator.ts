@@ -192,13 +192,13 @@ Return valid JSON with these exact fields mapped properly to the schema.
   
   // Map raw evaluation to the DB schema exactly
   const mappedEval = {
-    score: Math.round(((evaluationRaw.correctness || 0.7) * 100)),
-    depth: (evaluationRaw.technicalDepth > 0.8) ? 'expert' : (evaluationRaw.technicalDepth > 0.6 ? 'strong' : 'partial'),
-    correctness: (evaluationRaw.correctness > 0.8) ? 'strong' : (evaluationRaw.correctness > 0.5 ? 'correct' : 'partial'),
-    technical_accuracy: Math.round(((evaluationRaw.technicalDepth || 0.7) * 100)),
-    reasoning_score: Math.round(((evaluationRaw.reasoning || 0.7) * 100)),
-    communication_score: Math.round(((evaluationRaw.confidence || 0.7) * 100)),
-    confidence: evaluationRaw.confidence || 0.8,
+    score: Math.round(((evaluationRaw.correctness ?? 0.7) * 100)),
+    depth: ((evaluationRaw.technicalDepth ?? 0.7) > 0.8) ? 'expert' : ((evaluationRaw.technicalDepth ?? 0.7) > 0.6 ? 'strong' : 'partial'),
+    correctness: ((evaluationRaw.correctness ?? 0.7) > 0.8) ? 'strong' : ((evaluationRaw.correctness ?? 0.7) > 0.5 ? 'correct' : 'partial'),
+    technical_accuracy: Math.round(((evaluationRaw.technicalDepth ?? 0.7) * 100)),
+    reasoning_score: Math.round(((evaluationRaw.reasoning ?? 0.7) * 100)),
+    communication_score: Math.round(((evaluationRaw.confidence ?? 0.7) * 100)),
+    confidence: evaluationRaw.confidence ?? 0.8,
     strengths: evaluationRaw.strengths || [],
     weaknesses: evaluationRaw.weaknesses || [],
     missing_concepts: evaluationRaw.missingConcepts || [],
