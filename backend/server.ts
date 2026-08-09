@@ -4,7 +4,7 @@ import fs from "fs";
 import dotenv from "dotenv";
 const CANDIDATES_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../data/candidates.json"), "utf8"));
 const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../data/curriculum.json"), "utf8"));
-import { interviewStore } from "./src/server/interviewStore";
+import { supabase } from "./supabaseClient";
 import { initializeInterview, processTurn, compileFinalFeedback } from "./src/server/orchestrator";
 import { Candidate } from "./src/types/interview";
 
@@ -32,28 +32,46 @@ async function startServer() {
   });
 
   // API Route: Get Interview Session State (Internal UI helper)
-  app.get("/api/session/:sessionId", (req, res) => {
+  app.get("/api/session/:sessionId", async (req, res) => {
     const { sessionId } = req.params;
-    const session = interviewStore.get(sessionId);
-    if (!session) {
-      return res.status(404).json({ error: "Interview session not found" });
+    const { data: sessionData, error } = await supabase
+      .from('interview_sessions')
+      .select('*, interview_state(*), interview_turns(*)')
+      .eq('session_id', sessionId)
+      .single();
+
+    if (error || !sessionData) {
+      return res.status(404).json({ error: "Interview session not found in DB" });
     }
-    res.json(session);
+    
+    const state = sessionData.interview_state[0];
+    const turns = sessionData.interview_turns;
+    
+    // Construct a mock structure for the UI if it expects history etc
+    res.json({
+      sessionId,
+      status: sessionData.status,
+      questionCount: state.questions_asked,
+      coveredDays: state.curriculum_days_covered || [],
+      history: turns.map((t: any) => ({
+        role: t.role,
+        content: t.content
+      }))
+    });
   });
 
   // API Route: Force Finish Interview and Generate Feedback
   app.post("/api/interview/finish", async (req, res) => {
     try {
       const { sessionId } = req.body;
-      const session = interviewStore.get(sessionId);
-      if (!session) {
+      const { data: sessionData } = await supabase.from('interview_sessions').select('*').eq('session_id', sessionId).single();
+      
+      if (!sessionData) {
         return res.status(404).json({ error: "Session not found" });
       }
 
-      session.status = 'completed';
-      const finalFeedback = await compileFinalFeedback(session);
-      session.finalFeedback = finalFeedback;
-      interviewStore.set(sessionId, session);
+      const finalFeedback = await compileFinalFeedback(sessionId);
+      await supabase.from('interview_sessions').update({ status: 'completed' }).eq('session_id', sessionId);
 
       return res.json({
         reply: "Interview concluded upon request. Detailed evaluation report generated.",
@@ -63,8 +81,7 @@ async function startServer() {
           strengths: finalFeedback.strengths,
           gaps: finalFeedback.gaps,
           next: finalFeedback.next
-        },
-        session
+        }
       });
     } catch (err: any) {
       console.error("Error finishing interview:", err);
@@ -81,59 +98,45 @@ async function startServer() {
         return res.status(400).json({ error: "sessionId is required" });
       }
 
-      // 1. Initial Start Scenario: candidate object provided (or session doesn't exist yet)
-      if (candidate || !interviewStore.has(sessionId)) {
+      const { data: existingSession } = await supabase.from('interview_sessions').select('*').eq('session_id', sessionId).single();
+
+      // 1. Initial Start Scenario: session doesn't exist yet
+      if (!existingSession) {
         const candidateData: Candidate = candidate || CANDIDATES_DATA[0];
-        const { state, initialReply } = await initializeInterview(sessionId, candidateData);
-        interviewStore.set(sessionId, state);
+        const { stateSummary, initialReply } = await initializeInterview(sessionId, candidateData);
 
         return res.json({
           reply: initialReply,
           done: false,
           sessionId,
-          stateSummary: {
-            questionCount: state.questionCount,
-            coveredDays: state.coveredDays,
-            difficulty: state.difficulty,
-            nextGoal: state.nextQuestionGoal
-          }
+          stateSummary
         });
       }
 
-      // 2. Turn Scenario: message provided
-      const session = interviewStore.get(sessionId);
-      if (!session) {
-        return res.status(404).json({ error: "Session not found. Please initialize interview first." });
-      }
-
-      if (session.status === 'completed') {
+      // 2. Turn Scenario: session exists
+      if (existingSession.status === 'completed') {
+        const { data: feedbackData } = await supabase.from('interview_feedback').select('*').eq('session_id', sessionId).single();
         return res.json({
           reply: "This interview has already been completed.",
           done: true,
-          feedback: session.finalFeedback ? {
-            summary: session.finalFeedback.summary,
-            strengths: session.finalFeedback.strengths,
-            gaps: session.finalFeedback.gaps,
-            next: session.finalFeedback.next
+          feedback: feedbackData ? {
+            summary: feedbackData.summary,
+            strengths: feedbackData.strengths,
+            gaps: feedbackData.gaps,
+            next: feedbackData.next_steps
           } : undefined
         });
       }
 
       const candidateAnswer = message || "I understand the concept.";
-      const turnResult = await processTurn(session, candidateAnswer);
-      interviewStore.set(sessionId, turnResult.state);
+      const turnResult = await processTurn(sessionId, candidateAnswer);
 
       return res.json({
         reply: turnResult.reply,
         done: turnResult.done,
         feedback: turnResult.feedback,
         sessionId,
-        stateSummary: {
-          questionCount: turnResult.state.questionCount,
-          coveredDays: turnResult.state.coveredDays,
-          difficulty: turnResult.state.difficulty,
-          nextGoal: turnResult.state.nextQuestionGoal
-        }
+        stateSummary: turnResult.stateSummary
       });
     } catch (err: any) {
       console.error("Error handling /api/interview:", err);
