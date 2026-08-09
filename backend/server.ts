@@ -2,13 +2,14 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
-const CANDIDATES_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../data/candidates.json"), "utf8"));
-const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../data/curriculum.json"), "utf8"));
 import { supabase } from "./supabaseClient";
 import { initializeInterview, processTurn, compileFinalFeedback } from "./src/server/orchestrator";
 import { Candidate } from "./src/types/interview";
 
 dotenv.config();
+
+const CANDIDATES_DATA = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/candidates.json"), "utf8"));
+const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/curriculum.json"), "utf8"));
 
 async function startServer() {
   const app = express();
