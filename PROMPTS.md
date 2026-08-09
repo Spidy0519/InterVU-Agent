@@ -45,3 +45,11 @@ This log documents the prompt architecture and development prompt history used d
 - **Purpose**: Completely overhauled the standard question feed into a modern, full-fledged chat interface to provide a familiar and engaging ChatGPT-like user experience.
 - **Prompt**: "text box fixed bottom" & "remove this upper the text box 'Adaptive Sequence'" & "in chat text box remove this in image analyse"
 - **Purpose**: Refined the chat layout to dock the input composer fixed to the bottom of the screen (full width) while removing cluttered metadata and unused formatting icons, achieving a pristine, minimalist chat UI.
+
+---
+
+## 7. Supabase Master Database Integration Prompts
+- **Prompt**: "Build the complete Supabase PostgreSQL database for an **AI Interview Agent hackathon application**. The database must support the complete application workflow: Candidate Profile → Curriculum Analysis → Interview Planning → Question Generation → Candidate Answer → Answer Evaluation → Adaptive Decision → Next Question → Interview State → Final Feedback... Do NOT design this as a simple chatbot database."
+- **Purpose**: Designed and implemented a robust, relational PostgreSQL database schema with custom stored procedures (`create_interview_session`, `record_interview_turn`, `save_answer_evaluation`) to manage the state of the complex adaptive interview engine.
+- **Prompt**: "all are ok how to intergrate supabase with this project you can change it"
+- **Purpose**: Migrated the Express backend from an in-memory local state map to the Supabase PostgreSQL database. Developed a seeding script for Candidates and Curriculum data, and completely refactored the orchestrator engine to transact with the database asynchronously.
