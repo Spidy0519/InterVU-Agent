@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Candidate, InterviewState, QuestionDifficulty, QuestionType } from '../types/interview';
+import { InterviewState } from '../types/interview';
 import {
   Send,
   HelpCircle,
@@ -9,7 +9,10 @@ import {
   Award,
   Clock,
   Timer,
-  AlertTriangle
+  AlertTriangle,
+  Bot,
+  User,
+  CheckCheck
 } from 'lucide-react';
 
 interface InterviewSessionProps {
@@ -34,7 +37,7 @@ export const InterviewSession: React.FC<InterviewSessionProps> = ({
   isLoading,
 }) => {
   const [answerText, setAnswerText] = useState('');
-  const [thinkingMessage, setThinkingMessage] = useState('Evaluating candidate response & updating interview strategy...');
+
   const [questionTimeLeft, setQuestionTimeLeft] = useState(QUESTION_LIMIT_SECS);
   const [totalTimeLeft, setTotalTimeLeft] = useState(TOTAL_LIMIT_SECS);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -82,23 +85,6 @@ export const InterviewSession: React.FC<InterviewSessionProps> = ({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [session.history, isLoading]);
 
-  useEffect(() => {
-    if (isLoading) {
-      const messages = [
-        "Analyzing technical reasoning & depth...",
-        "Checking claims against curriculum objectives...",
-        "Evaluating trade-off understanding...",
-        "Determining adaptive follow-up route...",
-        "Formulating targeted follow-up question..."
-      ];
-      let idx = 0;
-      const interval = setInterval(() => {
-        idx = (idx + 1) % messages.length;
-        setThinkingMessage(messages[idx]);
-      }, 1500);
-      return () => clearInterval(interval);
-    }
-  }, [isLoading]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,12 +112,6 @@ export const InterviewSession: React.FC<InterviewSessionProps> = ({
   const hasSubmittedAnswer = session.history.some(turn => Boolean(turn.answer && turn.answer.trim()));
   const isFinalAnswerSubmitted = session.status === 'completed' || session.history.filter(turn => Boolean(turn.answer && turn.answer.trim())).length >= TOTAL_QUESTIONS_COUNT;
 
-  const currentQuestionIndex = session.history.length - 1;
-  const currentTurn = session.history[currentQuestionIndex];
-
-  // Timing Progress Percentages
-  const questionElapsedPercent = Math.min(100, Math.max(0, ((QUESTION_LIMIT_SECS - questionTimeLeft) / QUESTION_LIMIT_SECS) * 100));
-  const totalElapsedPercent = Math.min(100, Math.max(0, ((TOTAL_LIMIT_SECS - totalTimeLeft) / TOTAL_LIMIT_SECS) * 100));
 
   // Timer Status Colors
   const isQuestionTimeLow = questionTimeLeft <= 60; // < 1 min
@@ -289,62 +269,77 @@ export const InterviewSession: React.FC<InterviewSessionProps> = ({
             <Brain className="w-4 h-4 text-sky-600" />
             <span>Interactive Technical Interview Transcript</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500">
-            <span>Adaptive Sequence</span>
-            <span>•</span>
-            <span className="text-sky-700 font-bold">Question {session.questionCount} of 8</span>
-          </div>
+
         </div>
 
-        <div className="p-6 space-y-6 max-h-[500px] overflow-y-auto bg-slate-50/30">
-          {currentTurn && (
-            <div key={currentTurn.question.id || currentQuestionIndex} id={`transcript-turn-${currentQuestionIndex}`} className="space-y-4">
+        <div className="p-6 space-y-6 max-h-[500px] overflow-y-auto bg-white">
+          {session.history.map((turn, index) => (
+            <div key={turn.question.id || index} id={`transcript-turn-${index}`} className="space-y-6">
               {/* Interviewer Question Box */}
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-1 shadow-xs">
-                  AI
+                <div className="w-9 h-9 rounded-full bg-[#4F46E5] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5">
+                  <Bot className="w-5 h-5" />
                 </div>
-                <div className="flex-1 bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs space-y-2">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2 text-[13px]">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-slate-900">
-                        AI Interviewer
-                      </span>
-                      <span className="text-slate-400">•</span>
-                      <span className="px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 font-medium">
-                        Day {currentTurn.question.curriculumDay}: {currentTurn.question.topic}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                        {currentTurn.question.type}
-                      </span>
-                    </div>
-                    <span className="text-sky-700 font-bold text-xs bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200">
-                      Q{currentQuestionIndex + 1} of 8
+                <div className="flex-1 max-w-[85%] bg-[#F8F9FF] p-4 rounded-2xl rounded-tl-sm border border-indigo-50/60 shadow-xs space-y-2">
+                  <div className="flex items-center space-x-2 text-[12px] mb-1">
+                    <span className="font-bold text-slate-900">AI Interviewer</span>
+                    <span className="text-slate-400">10:15 AM</span>
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold text-[10px]">
+                      Day {turn.question.curriculumDay}: {turn.question.topic}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium text-[10px]">
+                      {turn.question.type}
+                    </span>
+                    <span className="ml-auto text-indigo-700 font-bold text-[10px] bg-white px-2 py-0.5 rounded-full border border-indigo-50 shadow-xs">
+                      Q{index + 1} of 8
                     </span>
                   </div>
-
-                  <p className="text-[17px] text-slate-900 leading-relaxed font-medium whitespace-pre-line">
-                    {currentTurn.question.text}
+                  <p className="text-[14px] text-slate-900 leading-relaxed font-medium whitespace-pre-line">
+                    {turn.question.text}
                   </p>
                 </div>
               </div>
+
+              {/* Candidate Response Box */}
+              {turn.answer && (
+                <div className="flex items-start space-x-3 justify-end mt-4">
+                  <div className="flex-1 max-w-[85%] bg-[#F0F6FF] p-4 rounded-2xl rounded-tr-sm border border-sky-100/60 shadow-xs space-y-1">
+                    <div className="flex items-center justify-end space-x-2 text-[11px] mb-1">
+                       <span className="text-slate-400">10:16 AM</span>
+                    </div>
+                    <p className="text-[14px] text-slate-800 leading-relaxed whitespace-pre-line text-left font-medium">
+                      {turn.answer}
+                    </p>
+                    <div className="flex items-center justify-end text-[10px] text-slate-400 mt-2 space-x-1">
+                      <span>Delivered</span>
+                      <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+                    </div>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-[#3B82F6] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5">
+                    <User className="w-5 h-5" />
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          ))}
 
           {/* Thinking / Processing Spinner Indicator */}
           {isLoading && (
-            <div className="flex items-center space-x-3 p-4 bg-white rounded-xl border border-sky-200 shadow-xs animate-pulse">
-              <div className="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center shrink-0">
-                <Brain className="w-4 h-4 animate-spin" />
-              </div>
-              <div>
-                <p className="text-[13.5px] font-semibold text-slate-900">
-                  AI Interviewer is reasoning...
-                </p>
-                <p className="text-[13px] text-slate-500 mt-0.5">
-                  {thinkingMessage}
-                </p>
-              </div>
+            <div className="flex items-start space-x-3 mt-4">
+               <div className="w-9 h-9 rounded-full bg-[#4F46E5] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5">
+                  <Bot className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center space-x-2 text-[12px] mb-1">
+                    <span className="font-bold text-slate-900">AI Interviewer</span>
+                    <span className="text-slate-400">10:16 AM</span>
+                  </div>
+                  <div className="bg-[#F8F9FF] px-4 py-3.5 rounded-2xl rounded-tl-sm border border-indigo-50/60 inline-flex items-center space-x-1.5 shadow-xs">
+                    <div className="w-1.5 h-1.5 bg-[#4F46E5]/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1.5 h-1.5 bg-[#4F46E5]/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1.5 h-1.5 bg-[#4F46E5]/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
             </div>
           )}
 
@@ -354,53 +349,49 @@ export const InterviewSession: React.FC<InterviewSessionProps> = ({
 
       {/* Answer Input Controls */}
       {session.status === 'in_progress' && (
-        <div id="answer-input-container" className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs">
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="flex items-center justify-end text-xs text-slate-500 font-medium">
-              <span className={`font-mono font-bold ${isQuestionTimeLow ? 'text-amber-600' : 'text-slate-600'}`}>
-                Time Left for Question {session.questionCount}: {formatTime(questionTimeLeft)}
-              </span>
+        <div className="fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-slate-200 shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div id="answer-input-container" className="bg-slate-50 rounded-xl p-2 border border-slate-200">
+              <form onSubmit={handleSubmit} className="space-y-0">
+                <textarea
+                  id="candidate-answer-textarea"
+                  rows={2}
+                  value={answerText}
+                  onChange={(e) => setAnswerText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                  placeholder="Type your answer here..."
+                  className="w-full p-2 text-[14px] bg-transparent border-0 focus:ring-0 resize-none min-h-[50px] text-slate-900 placeholder:text-slate-400 outline-hidden"
+                />
+
+                <div className="flex items-center justify-end pt-2">
+                  <div className="flex items-center space-x-3">
+                     <div className="flex items-center space-x-2">
+                       {isQuestionTimeExpired && (
+                         <button
+                           type="button"
+                           onClick={handleAutoSubmit}
+                           className="mr-2 px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                         >
+                           Auto-Submit
+                         </button>
+                       )}
+                       <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                       <button
+                        id="btn-submit-response"
+                        type="submit"
+                        disabled={!answerText.trim() || isLoading}
+                        className="px-4 py-2 bg-[#4F46E5] text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-all shadow-xs cursor-pointer"
+                      >
+                        <span>Submit Response</span>
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                     </div>
+                  </div>
+                </div>
+              </form>
             </div>
-
-            <textarea
-              id="candidate-answer-textarea"
-              rows={4}
-              value={answerText}
-              onChange={(e) => setAnswerText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isLoading}
-              placeholder="Enter Answer"
-              className="w-full p-3.5 text-[15px] bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-900 placeholder:text-slate-400 resize-y min-h-[100px]"
-            />
-
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <span className="text-xs text-slate-400 hidden sm:inline">
-                Question {session.questionCount} of 8 • 5 mins allocated
-              </span>
-
-              <div className="flex items-center space-x-2">
-                {isQuestionTimeExpired && (
-                  <button
-                    type="button"
-                    onClick={handleAutoSubmit}
-                    className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                  >
-                    Auto-Submit
-                  </button>
-                )}
-
-                <button
-                  id="btn-submit-response"
-                  type="submit"
-                  disabled={!answerText.trim() || isLoading}
-                  className="px-5 py-2.5 bg-sky-600 text-white rounded-lg text-sm font-semibold hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-all shadow-xs cursor-pointer"
-                >
-                  <span>Submit Response</span>
-                  <Send className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </form>
+          </div>
         </div>
       )}
     </div>
