@@ -61,7 +61,7 @@ export const CurriculumMap: React.FC<CurriculumMapProps> = () => {
   };
 
   return (
-    <div id="curriculum-map-view" className="space-y-6 max-w-4xl mx-auto py-2">
+    <div id="curriculum-map-view" className="space-y-6 w-full py-2">
       {/* Header & Controls Bar */}
       <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>

@@ -175,8 +175,8 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <main id="app-main-content" className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <main id="app-main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6">
           {/* Global Error Alert Banner */}
           {errorMessage && (
             <div id="app-error-banner" className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-[13.5px] flex items-center justify-between">

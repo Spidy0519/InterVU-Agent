@@ -16,7 +16,7 @@ export const InterviewRules: React.FC<InterviewRulesProps> = ({
   isLoading = false,
 }) => {
   return (
-    <div id="interview-rules-container" className="w-full max-w-5xl mx-auto flex flex-col justify-between space-y-4 py-1 sm:py-2">
+    <div id="interview-rules-container" className="w-full flex flex-col justify-between space-y-4 py-1 sm:py-2">
       {/* Top Header: Navigation & Timing Badges */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200/80">
         <button
