@@ -764,3 +764,17 @@ BEGIN
     WHERE session_id = p_session_id;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- 8. Evaluation, Dynamic Fallbacks & Multi-Agent API Keys
+-- ============================================================================
+
+## 8. Evaluation, Dynamic Fallbacks & Multi-Agent API Keys
+- **Prompt**: "interview is complete but I give only wrong answer scroe is Sarah Johnson Overall Score 82 / 100... fix this error i wrote wrong answer give 0 scroe answer based analyse ai and give score"
+- **Purpose**: Discovered that when the AI hit rate limits, it fell back to a hardcoded score of 82. Refactored `fallbackFeedback` and `fallbackEval` in `orchestrator.ts` to dynamically calculate the score using a mathematical average of recorded turns, or penalize short/nonsense answers with a `0.0`.
+- **Prompt**: "not working user answers the question separate ai api key use question and answer evalate and giving score and What You Learned,Recommended to Study fix it all"
+- **Purpose**: 
+  1. **Strict AI Evaluation Engine**: The AI naturally hallucinated high scores (82) because it only saw the raw chat transcript. Modified `compileFinalFeedback` to explicitly inject `[Turn Evaluation: Score X/100]` directly into the LLM prompt. Added a strict `CRITICAL INSTRUCTION: Be extremely strict and objective. DO NOT artificially inflate scores.`
+  2. **Falsy JavaScript Bug**: Fixed a critical JavaScript bug where `0 || 0.7` converted a legitimate AI score of 0 into 70% by swapping logical ORs with Nullish Coalescing operators (`??`).
+  3. **Multi-Agent API Routing**: To prevent API quota crashes on a single key, updated `geminiService.ts` to support dual-keys (`GEMINI_API_KEY` for interview generation and `EVALUATOR_API_KEY` exclusively for answer evaluation and report generation).
+  4. **Dynamic Topics**: Removed hardcoded "What You Learned" strings from `EvaluationReport.tsx`, allowing it to dynamically render what the AI evaluated.
