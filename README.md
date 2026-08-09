@@ -16,14 +16,15 @@ Traditional technical interviews are often rigidly scripted and fail to capture 
   - **Clarify / Challenge**: Probing shallow answers or unsupported claims.
   - **Switch Topic**: Seamlessly transitioning to unassessed curriculum areas.
 - **Strict Proctoring**: Enforces fullscreen mode during the interview. Exiting prematurely automatically aborts the session and logs the system event.
+- **Strict & Objective Scoring Engine**: The agent evaluates answers turn-by-turn against strict rubrics, ensuring it does not artificially inflate scores. It penalizes non-sensical or overly short answers explicitly.
 - **Structured Final Evaluation Report**: Generates a rigorous executive summary, scoring across 5 dimensions (Conceptual, Depth, System Design, Reasoning, Production), evidence-backed strengths, critical knowledge gaps, and actionable next steps.
 
 ## 🛠️ How we built it
 
 Our stack is separated into a robust backend API and a modern React frontend:
-- **Backend (Node.js/Express)**: Exposes the exact `POST /api/interview` contract required by the hackathon spec. The core logic lives in `orchestrator.ts`, which leverages **Gemini 3.6 Flash** for high-speed, intelligent prompt orchestration.
+- **Backend (Node.js/Express)**: Exposes the exact `POST /api/interview` contract required by the hackathon spec. The core logic lives in `orchestrator.ts`, which leverages **Gemini 3.6 Flash** for high-speed, intelligent prompt orchestration. It features a dual-agent architecture routing generic conversation generation to one API key and rigorous answer evaluation to another to bypass aggressive rate limits.
 - **Database (Supabase PostgreSQL)**: We migrated from local in-memory state to a robust relational database. It utilizes custom stored procedures (`create_interview_session`, `record_interview_turn`, `save_answer_evaluation`) to manage the complex, adaptive state of the engine.
-- **Frontend (React/Vite)**: A minimalist, modern UI featuring a ChatGPT-like chat interface, real-time curriculum mapping, and strict proctoring mechanisms.
+- **Frontend (React/Vite)**: A minimalist, modern UI featuring a ChatGPT-like chat interface, real-time curriculum mapping, dynamic feedback rendering, and strict proctoring mechanisms.
 
 ### Architecture
 ```text
@@ -45,8 +46,10 @@ Interview Orchestrator (orchestrator.ts)
 ```
 
 ## 🧠 Challenges we ran into
-- **Model Rate Limits**: Frequent testing caused Gemini API rate limits (`429 Resource Exhausted`). We engineered a dynamic fallback mechanism that still provides contextually appropriate questions and transitions even when the API is temporarily exhausted.
-- **Database Constraints**: Mapping the complex LLM-generated JSON evaluations to strict PostgreSQL schema types required robust typing and validation before executing our custom RPCs.
+- **Model Rate Limits**: Frequent testing caused Gemini API rate limits (`429 Resource Exhausted`). We fixed this in two ways:
+  1. We engineered a dynamic fallback mechanism that provides contextually appropriate fallback questions and transitions when the API is temporarily exhausted.
+  2. We implemented a **Multi-Agent API Routing System** in `geminiService.ts` that safely routes conversational turns through `GEMINI_API_KEY` and complex, token-heavy answer evaluations through a secondary `EVALUATOR_API_KEY`, effectively doubling our rate limit threshold.
+- **Database Constraints**: Mapping the complex LLM-generated JSON evaluations to strict PostgreSQL schema types required robust typing, validation, and nullish-coalescing fallbacks before executing our custom RPCs (e.g., dynamically falling back to the curriculum day title if the AI hallucinates a `null` topic).
 - **State Looping**: Early iterations of the adaptive engine got "stuck" repeating the same topic. We fixed this by correctly synchronizing the `curriculum_days_covered` array between the LLM orchestrator and Supabase.
 
 ## 🔮 What's next
@@ -59,6 +62,19 @@ Interview Orchestrator (orchestrator.ts)
 ## 🚦 Local Setup & Run
 
 We use a monorepo setup.
+
+First, create an `.env` file in the root directory and add your API keys:
+```env
+# Required for standard conversational turns
+GEMINI_API_KEY="your_api_key_here"
+
+# (Optional) Separate key for strict answer evaluation to avoid rate limits
+EVALUATOR_API_KEY="your_second_api_key_here"
+
+# Supabase Credentials
+SUPABASE_URL="your_supabase_url"
+SUPABASE_SERVICE_ROLE_KEY="your_service_role_key"
+```
 
 ```bash
 # Terminal 1: Start Backend (Port 3000)
