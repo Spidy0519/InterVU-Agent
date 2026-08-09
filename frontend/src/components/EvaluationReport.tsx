@@ -1,6 +1,6 @@
 import React from 'react';
 import { FinalFeedback, InterviewState } from '../types/interview';
-import { CheckCircle2, Compass } from 'lucide-react';
+import { CheckCircle2, Compass, ArrowLeft } from 'lucide-react';
 
 interface EvaluationReportProps {
   session: InterviewState;
@@ -11,6 +11,7 @@ interface EvaluationReportProps {
 export const EvaluationReport: React.FC<EvaluationReportProps> = ({
   session,
   report,
+  onResetInterview,
 }) => {
   const candidateName = session.candidate.member.name;
   const candidateRole = session.candidate.member.jobRole;
@@ -157,6 +158,18 @@ export const EvaluationReport: React.FC<EvaluationReportProps> = ({
           </div>
         </div>
       </div>
+
+      {onResetInterview && (
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={onResetInterview}
+            className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors shadow-sm"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Return to Candidate Dashboard</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

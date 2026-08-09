@@ -377,13 +377,28 @@ export async function compileFinalFeedback(sessionId: string): Promise<FinalFeed
   const state = Array.isArray(sessionData.interview_state) 
     ? sessionData.interview_state[0] 
     : sessionData.interview_state;
+  const evals = Array.isArray(sessionData.answer_evaluations) ? sessionData.answer_evaluations : [];
+  
   const turns = sessionData.interview_turns.sort((a: any, b: any) => a.turn_index - b.turn_index);
   
-  const historySummary = turns.map((t: any) => `[${t.role.toUpperCase()}] ${t.topic ? `(${t.topic})` : ''}: ${t.content}`).join("\n---\n");
+  const historySummary = turns.map((t: any) => {
+    let evalStr = "";
+    if (t.role === 'candidate') {
+      const ev = evals.find((e: any) => e.turn_id === t.id);
+      if (ev) {
+        evalStr = `\n[Turn Evaluation: Score ${ev.score}/100, Accuracy ${ev.technical_accuracy}/100 - ${ev.evaluation_reason}]`;
+      }
+    }
+    return `[${t.role.toUpperCase()}] ${t.topic ? `(${t.topic})` : ''}: ${t.content}${evalStr}`;
+  }).join("\n---\n");
 
   const prompt = `
 You are the Lead Evaluator for technical assessments.
 Synthesize the final evaluation report for candidate ${candidate.name} (${candidate.job_role}).
+
+CRITICAL INSTRUCTION: Be extremely strict and objective. DO NOT artificially inflate scores.
+If the candidate's answers are short, nonsensical, irrelevant (e.g. "asdf", "wrong answer"), or technically incorrect, the overallScore and dimension scores MUST reflect this and be appropriately low (e.g., 0-30). 
+Rely heavily on the provided [Turn Evaluation] scores as ground truth. If the turn evaluations average to a very low number, your final overallScore MUST be equally low.
 
 Interview Transcript & Evaluations:
 ${historySummary}
@@ -407,8 +422,7 @@ Produce a structured final report JSON matching this exact structure:
 }
 `;
 
-  const evals = Array.isArray(sessionData.answer_evaluations) ? sessionData.answer_evaluations : [];
-  
+
   let avgScore = 50;
   let avgConceptual = 50;
   let avgTech = 50;
