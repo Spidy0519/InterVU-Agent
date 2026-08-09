@@ -8,8 +8,8 @@ import { Candidate } from "./src/types/interview";
 
 dotenv.config();
 
-const CANDIDATES_DATA = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, "../data/candidates.json"), "utf8"));
-const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, "../data/curriculum.json"), "utf8"));
+const CANDIDATES_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../data/candidates.json"), "utf8"));
+const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../data/curriculum.json"), "utf8"));
 
 async function startServer() {
   const app = express();
@@ -132,7 +132,7 @@ async function startServer() {
       const { sessionId, stars, description } = req.body;
       const fs = require('fs');
       const path = require('path');
-      const feedbacksFile = path.resolve(__dirname, '../../data/feedbacks.json');
+      const feedbacksFile = path.resolve(process.cwd(), '../data/feedbacks.json');
       
       let feedbacks = [];
       if (fs.existsSync(feedbacksFile)) {
