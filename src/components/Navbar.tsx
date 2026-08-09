@@ -14,6 +14,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
+  selectedCandidate,
   hasActiveSession,
   hasCompletedReport,
   previousTab,
@@ -24,34 +25,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     setActiveTab(tab);
     setIsOpen(false);
   };
-
-  // On the Interview Agent or Rules page, return null to hide top header completely
-  if (activeTab === 'interview' || activeTab === 'rules') {
-    return null;
-  }
-
-  // On the Curriculum page (curriculum tab), show the ← Back button and title directly next to it in the same horizontal row
-  if (activeTab === 'curriculum') {
-    return (
-      <header id="navbar-header" className="sticky top-0 z-40 bg-white border-b border-slate-200/80 shadow-xs">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16 space-x-3.5">
-            <button
-              id="btn-back-from-curriculum"
-              onClick={() => setActiveTab(previousTab && previousTab !== 'curriculum' ? previousTab : 'candidates')}
-              className="flex items-center space-x-2 text-slate-800 hover:text-slate-900 font-semibold text-base py-2 px-3.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200 shadow-xs bg-white shrink-0"
-            >
-              <ArrowLeft className="w-5 h-5 shrink-0" />
-              <span>Back</span>
-            </button>
-            <span className="font-bold text-slate-900 text-lg sm:text-xl tracking-tight">
-              Remix AI Technical Interview Agent
-            </span>
-          </div>
-        </div>
-      </header>
-    );
-  }
 
   return (
     <>
@@ -64,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 id="hamburger-menu-btn"
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-hidden focus:ring-2 focus:ring-slate-300"
+                className="p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-hidden focus:ring-2 focus:ring-slate-300 cursor-pointer"
                 aria-label="Toggle navigation menu"
               >
                 {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -79,13 +52,31 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-slate-900 text-[20px] tracking-tight">
+                    <span className="font-bold text-slate-900 text-lg sm:text-[20px] tracking-tight">
                       Interview Agent
                     </span>
+                    {selectedCandidate && (activeTab === 'interview' || activeTab === 'rules') && (
+                      <span className="hidden sm:inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>{selectedCandidate.member.name}</span>
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Right: Back button if in curriculum or rules view */}
+            {(activeTab === 'curriculum' || activeTab === 'rules') && (
+              <button
+                id="btn-navbar-back"
+                onClick={() => setActiveTab(previousTab && previousTab !== activeTab ? previousTab : 'candidates')}
+                className="flex items-center space-x-1.5 text-slate-700 hover:text-slate-900 font-semibold text-xs sm:text-sm py-1.5 px-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200 shadow-xs bg-white shrink-0"
+              >
+                <ArrowLeft className="w-4 h-4 shrink-0" />
+                <span>Back</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
