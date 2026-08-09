@@ -116,6 +116,8 @@ export async function processTurn(sessionId: string, candidateAnswer: string) {
   });
   if (candTurnErr) throw new Error(`Failed to record candidate turn: ${candTurnErr.message}`);
 
+  console.log("candTurnData returned from RPC:", candTurnData);
+
   // 2. Fetch full session context for Gemini evaluation
   const { data: sessionData, error: sessionErr } = await supabase
     .from('interview_sessions')
@@ -125,7 +127,9 @@ export async function processTurn(sessionId: string, candidateAnswer: string) {
     
   if (sessionErr || !sessionData) throw new Error("Session not found in DB");
 
-  const state = sessionData.interview_state[0];
+  const state = Array.isArray(sessionData.interview_state) 
+    ? sessionData.interview_state[0] 
+    : sessionData.interview_state;
   const candidate = sessionData.candidates;
   
   // Sort turns chronologically
@@ -346,7 +350,9 @@ export async function compileFinalFeedback(sessionId: string): Promise<FinalFeed
   if (!sessionData) throw new Error("Session not found");
 
   const candidate = sessionData.candidates;
-  const state = sessionData.interview_state[0];
+  const state = Array.isArray(sessionData.interview_state) 
+    ? sessionData.interview_state[0] 
+    : sessionData.interview_state;
   const turns = sessionData.interview_turns.sort((a: any, b: any) => a.turn_index - b.turn_index);
   
   const historySummary = turns.map((t: any) => `[${t.role.toUpperCase()}] ${t.topic ? `(${t.topic})` : ''}: ${t.content}`).join("\n---\n");
