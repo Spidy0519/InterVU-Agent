@@ -3,7 +3,7 @@
     "name": "intervu-backend",
     "scripts": {
         "build": "esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
-        "dev": "tsx server.ts",
+        "dev": "tsx watch server.ts",
         "start": "node dist/server.js"
     },
     "devDependencies": {

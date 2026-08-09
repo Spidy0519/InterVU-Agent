@@ -55,16 +55,45 @@ async function startServer() {
 
     const turns = sessionData.interview_turns || [];
     
+    // Reconstruct the { question, answer } paired history that the UI expects
+    const history = [];
+    let currentPair: any = null;
+
+    // Sort turns by created_at to ensure chronological order
+    const sortedTurns = turns.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    for (const t of sortedTurns) {
+      if (t.role === 'interviewer' || t.role === 'agent' || t.role === 'system') {
+        if (currentPair) history.push(currentPair);
+        currentPair = {
+          question: {
+            id: t.id || Math.random().toString(),
+            text: t.content,
+            curriculumDay: state.curriculum_days_covered?.[0] || 7,
+            topic: 'Technical Interview',
+            type: 'conceptual',
+            difficulty: 'medium'
+          }
+        };
+      } else if (t.role === 'candidate' && currentPair) {
+        currentPair.answer = t.content;
+        history.push(currentPair);
+        currentPair = null;
+      }
+    }
+    if (currentPair) history.push(currentPair);
+
+    // Look up the candidate from static data
+    const candidateData = CANDIDATES_DATA.candidates.find((c: any) => c.member.id === sessionData.candidate_id) || CANDIDATES_DATA.candidates[0];
+    
     // Construct a mock structure for the UI if it expects history etc
     res.json({
       sessionId,
+      candidate: candidateData,
       status: sessionData.status,
       questionCount: state.questions_asked,
       coveredDays: state.curriculum_days_covered || [],
-      history: turns.map((t: any) => ({
-        role: t.role,
-        content: t.content
-      }))
+      history
     });
   });
 
