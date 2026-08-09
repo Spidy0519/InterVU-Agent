@@ -426,7 +426,7 @@ Produce a structured final report JSON matching this exact structure:
   const generated = await generateContentJSON(prompt, "You are a senior AI technical interviewer compiling final candidate feedback.", fallbackFeedback);
 
   // Store in DB
-  await supabase.from('interview_feedback').insert({
+  await supabase.from('interview_feedback').upsert({
     session_id: sessionId,
     summary: generated.summary,
     overall_score: generated.overallScore,

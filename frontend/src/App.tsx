@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle, X, CheckCircle2, Star } from 'lucide-react';
 import { CandidateSelector } from './components/CandidateSelector';
 import { InterviewRules } from './components/InterviewRules';
 import { InterviewSession } from './components/InterviewSession';
@@ -31,6 +31,10 @@ export default function App() {
   const [session, setSession] = useState<InterviewState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [feedbackDesc, setFeedbackDesc] = useState('');
 
   // Strict Proctoring: Listen for fullscreen exit
   useEffect(() => {
@@ -134,11 +138,13 @@ export default function App() {
         const updatedSession = await sessionRes.json();
         setSession(updatedSession);
 
+        if (data.done && data.feedback) {
+          updatedSession.finalFeedback = data.feedback;
+        }
+        setSession(updatedSession);
+
         if (data.done && updatedSession.finalFeedback) {
-          if (document.fullscreenElement && document.exitFullscreen) {
-            document.exitFullscreen().catch((err) => console.warn(err));
-          }
-          setActiveTab('report');
+          setShowFeedbackPopup(true);
         }
       }
     } catch (err: any) {
@@ -168,12 +174,12 @@ export default function App() {
 
       const data = await response.json();
       if (data.session) {
+        if (data.feedback) {
+          data.session.finalFeedback = data.feedback;
+        }
         setSession(data.session);
       }
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch((err) => console.warn(err));
-      }
-      setActiveTab('report');
+      setShowFeedbackPopup(true);
     } catch (err: any) {
       console.error('Error finishing interview:', err);
       setErrorMessage(err?.message || 'Failed to generate final report');
@@ -208,7 +214,7 @@ export default function App() {
         <main id="app-main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6">
           {/* Global Error Modal Overlay */}
           {errorMessage && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
               <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="p-6">
                   <div className="flex items-start gap-4">
@@ -229,6 +235,82 @@ export default function App() {
                     className="px-5 py-2 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 transition-colors shadow-sm text-sm flex items-center gap-2"
                   >
                     <span>Understand</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Feedback Modal Overlay */}
+          {showFeedbackPopup && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 p-8 space-y-6">
+                <div className="text-center">
+                  <div className="mx-auto w-12 h-12 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Interview Completed!</h3>
+                  <p className="text-sm text-slate-500">Please rate your interview experience.</p>
+                </div>
+
+                <div className="flex justify-center gap-2 py-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setFeedbackRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="focus:outline-none transition-transform hover:scale-110"
+                    >
+                      <Star className={`w-10 h-10 ${star <= (hoverRating || feedbackRating) ? 'fill-yellow-400 text-yellow-400' : 'text-slate-200'}`} />
+                    </button>
+                  ))}
+                </div>
+
+                <textarea
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none text-slate-700 bg-slate-50 text-sm"
+                  placeholder="Any additional feedback? (Optional)"
+                  rows={3}
+                  value={feedbackDesc}
+                  onChange={(e) => setFeedbackDesc(e.target.value)}
+                />
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    disabled={feedbackRating === 0}
+                    onClick={async () => {
+                      if (feedbackRating > 0) {
+                        try {
+                          await fetch('/api/feedback', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ sessionId: session.sessionId, stars: feedbackRating, description: feedbackDesc })
+                          });
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }
+                      setShowFeedbackPopup(false);
+                      if (document.fullscreenElement && document.exitFullscreen) {
+                        document.exitFullscreen().catch((err) => console.warn(err));
+                      }
+                      setActiveTab('report');
+                    }}
+                    className="w-full py-2.5 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Submit Feedback
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowFeedbackPopup(false);
+                      if (document.fullscreenElement && document.exitFullscreen) {
+                        document.exitFullscreen().catch((err) => console.warn(err));
+                      }
+                      setActiveTab('report');
+                    }}
+                    className="w-full py-2.5 bg-white text-slate-600 font-medium rounded-xl hover:bg-slate-50 transition-all border border-slate-200"
+                  >
+                    Skip
                   </button>
                 </div>
               </div>
