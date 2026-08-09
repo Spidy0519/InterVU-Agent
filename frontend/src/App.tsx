@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { CandidateSelector } from './components/CandidateSelector';
 import { InterviewRules } from './components/InterviewRules';
@@ -13,7 +13,7 @@ import CANDIDATES_DATA_RAW from '../../data/candidates.json';
 const CANDIDATES_DATA = CANDIDATES_DATA_RAW.candidates as Candidate[];
 
 export default function App() {
-  const [candidates, setCandidates] = useState<Candidate[]>(CANDIDATES_DATA);
+  const [candidates] = useState<Candidate[]>(CANDIDATES_DATA);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(CANDIDATES_DATA[0] || null);
   const [activeTab, setActiveTabState] = useState<'candidates' | 'rules' | 'interview' | 'report' | 'curriculum' | 'api'>('candidates');
   const [previousTab, setPreviousTab] = useState<'candidates' | 'rules' | 'interview' | 'report' | 'curriculum' | 'api'>('candidates');
@@ -64,6 +64,13 @@ export default function App() {
         setSession(fullSession);
       }
 
+      // Enter full screen for proctored-like experience
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.warn(`Could not enable fullscreen mode: ${err.message}`);
+        });
+      }
+
       setActiveTab('interview');
     } catch (err: any) {
       console.error('Failed to start interview session:', err);
@@ -102,6 +109,9 @@ export default function App() {
         setSession(updatedSession);
 
         if (data.done && updatedSession.finalFeedback) {
+          if (document.fullscreenElement && document.exitFullscreen) {
+            document.exitFullscreen().catch((err) => console.warn(err));
+          }
           setActiveTab('report');
         }
       }
@@ -134,6 +144,9 @@ export default function App() {
       if (data.session) {
         setSession(data.session);
       }
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch((err) => console.warn(err));
+      }
       setActiveTab('report');
     } catch (err: any) {
       console.error('Error finishing interview:', err);
@@ -145,6 +158,9 @@ export default function App() {
 
   // Reset/Restart interview
   const handleResetInterview = () => {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch((err) => console.warn(err));
+    }
     setSession(null);
     setActiveTab('candidates');
   };
