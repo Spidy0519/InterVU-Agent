@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { CandidateSelector } from './components/CandidateSelector';
 import { InterviewRules } from './components/InterviewRules';
@@ -30,6 +30,31 @@ export default function App() {
   const [session, setSession] = useState<InterviewState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Strict Proctoring: Listen for fullscreen exit
+  useEffect(() => {
+    const handleFullscreenChange = async () => {
+      if (!document.fullscreenElement && activeTab === 'interview' && session?.status === 'in_progress') {
+        // User exited fullscreen prematurely
+        try {
+          await fetch('/api/interview/abort', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: session.sessionId }),
+          });
+        } catch (err) {
+          console.error("Failed to mark abort in backend", err);
+        }
+
+        setSession(null);
+        setActiveTab('candidates');
+        setErrorMessage("After entering the interview, you cannot exit fullscreen before completing the interview.");
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [activeTab, session]);
 
 
 

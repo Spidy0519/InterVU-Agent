@@ -97,6 +97,35 @@ async function startServer() {
     });
   });
 
+  // API Route: Abort Interview due to Fullscreen Exit
+  app.post("/api/interview/abort", async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      const { data: sessionData } = await supabase.from('interview_sessions').select('*').eq('session_id', sessionId).single();
+      
+      if (!sessionData) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      await supabase.from('interview_sessions').update({ status: 'aborted' }).eq('session_id', sessionId);
+      
+      // Optionally record the abort reason as a system turn
+      await supabase.rpc('record_interview_turn', {
+        p_session_id: sessionId,
+        p_role: 'system',
+        p_content: 'Candidate abandoned interview by exiting fullscreen mode.',
+        p_covers_day: null,
+        p_topic: 'System Event',
+        p_question_type: 'conceptual'
+      });
+
+      return res.json({ success: true, message: "Interview aborted" });
+    } catch (err: any) {
+      console.error("Error aborting interview:", err);
+      res.status(500).json({ error: err?.message || "Failed to abort interview" });
+    }
+  });
+
   // API Route: Force Finish Interview and Generate Feedback
   app.post("/api/interview/finish", async (req, res) => {
     try {
