@@ -172,18 +172,20 @@ Analyze this answer rigorously. Estimate:
 Return valid JSON with these exact fields mapped properly to the schema.
 `;
 
+  const isShort = candidateAnswer.length < 20;
+  
   const fallbackEval = {
-    correctness: 0.7,
-    completeness: 0.7,
-    technicalDepth: 0.65,
-    reasoning: 0.7,
-    confidence: 0.75,
-    strengths: ["Demonstrated foundational understanding"],
-    weaknesses: candidateAnswer.length < 50 ? ["Answer was brief"] : [],
-    missingConcepts: [],
+    correctness: isShort ? 0.0 : 0.4,
+    completeness: isShort ? 0.0 : 0.4,
+    technicalDepth: isShort ? 0.0 : 0.3,
+    reasoning: isShort ? 0.0 : 0.4,
+    confidence: 0.9,
+    strengths: isShort ? [] : ["Provided some response"],
+    weaknesses: isShort ? ["Answer was completely missing or too short to evaluate"] : ["Answer lacked technical depth"],
+    missingConcepts: ["Core concepts missing or API rate limit prevented evaluation"],
     claimsToProbe: [],
-    recommendedAction: candidateAnswer.length < 50 ? "clarify" : "go_deeper",
-    evaluatorNotes: "Candidate provided a direct response."
+    recommendedAction: isShort ? "clarify" : "go_deeper",
+    evaluatorNotes: "API fallback used. Answer was not deeply evaluated."
   };
 
   const evaluationRaw = await generateContentJSON(evalPrompt, "You are a strict, fair technical interviewer evaluator.", fallbackEval);
