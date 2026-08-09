@@ -31,23 +31,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Fetch Candidates from API on mount
-  useEffect(() => {
-    fetch('/api/candidates')
-      .then((res) => res.json())
-      .then((data) => {
-        const cands = data.candidates || data;
-        if (Array.isArray(cands) && cands.length > 0) {
-          setCandidates(cands);
-          if (!selectedCandidate) {
-            setSelectedCandidate(cands[0]);
-          }
-        }
-      })
-      .catch((err) => {
-        console.warn('Failed to fetch candidate data:', err);
-      });
-  }, []);
+
 
   // Handle starting a new interview session for a candidate
   const handleStartInterview = async (candidate: Candidate) => {
