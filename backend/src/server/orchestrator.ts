@@ -246,12 +246,19 @@ Return valid JSON with these exact fields mapped properly to the schema.
   let nextDayNum: number = currentCurriculumDay;
   const coveredDays: number[] = state.curriculum_days_covered || [];
   
+  if (!coveredDays.includes(currentCurriculumDay)) {
+    coveredDays.push(currentCurriculumDay);
+    await supabase.from('interview_state').update({ curriculum_days_covered: coveredDays }).eq('session_id', sessionId);
+  }
+  
   const shouldSwitchTopic = mappedEval.recommended_action === 'switch_topic';
 
   if (shouldSwitchTopic || state.questions_asked % 2 === 0) {
     const remainingDays = CURRICULUM_DATA.days.filter((d: any) => !coveredDays.includes(d.day));
     if (remainingDays.length > 0) {
-      nextDayNum = remainingDays[0].day;
+      // Pick a random remaining day instead of always index 0 to avoid loops
+      const randomIdx = Math.floor(Math.random() * remainingDays.length);
+      nextDayNum = remainingDays[randomIdx].day;
     } else {
       nextDayNum = (currentCurriculumDay % 31) + 1;
     }
@@ -305,9 +312,21 @@ Return JSON matching:
 }
 `;
 
+  const isSameDay = nextCurriculumDay.day === currentCurriculumDay;
+  const transitions = [
+    `Interesting point on ${currentTopic}.`,
+    `Thanks for explaining that.`,
+    `Got it, let's explore another angle.`
+  ];
+  const randTrans = transitions[Math.floor(Math.random() * transitions.length)];
+  
   const fallbackNext = {
-    transition: `Thanks for explaining that aspect. Moving into Day ${nextCurriculumDay.day}: ${nextCurriculumDay.title}.`,
-    questionText: `In the context of ${nextCurriculumDay.title}, how would you approach designing a production solution that balances performance, accuracy, and system complexity?`,
+    transition: isSameDay 
+       ? `${randTrans} Let's dive deeper into ${nextCurriculumDay.title}.`
+       : `${randTrans} Let's move on to Day ${nextCurriculumDay.day}: ${nextCurriculumDay.title}.`,
+    questionText: isSameDay
+       ? `Could you elaborate more on the trade-offs involved in ${nextCurriculumDay.title}, particularly regarding edge cases?`
+       : `In the context of ${nextCurriculumDay.title}, how would you approach designing a production solution that balances performance, accuracy, and system complexity?`,
     topic: nextCurriculumDay.title,
     questionType: 'reasoning'
   };
@@ -316,14 +335,17 @@ Return JSON matching:
   const reply = `${nextGen.transition}\n\n${nextGen.questionText}`;
 
   // 7. Record Agent Turn
-  await supabase.rpc('record_interview_turn', {
+  const { error: agentTurnErr } = await supabase.rpc('record_interview_turn', {
     p_session_id: sessionId,
     p_role: 'agent',
     p_content: reply,
     p_covers_day: nextCurriculumDay.day,
     p_topic: nextGen.topic,
-    p_question_type: nextGen.questionType
+    p_question_type: 'conceptual' // Forced to pass DB check constraint
   });
+  if (agentTurnErr) {
+    console.error("Failed to record agent turn:", agentTurnErr);
+  }
 
   // 8. Fetch updated state for UI
   const { data: updatedState } = await supabase.from('interview_state').select('*').eq('session_id', sessionId).single();

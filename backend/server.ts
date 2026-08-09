@@ -144,9 +144,7 @@ async function startServer() {
 
         return res.json({
           reply: initialReply,
-          done: false,
-          sessionId,
-          stateSummary
+          done: false
         });
       }
 
@@ -168,13 +166,16 @@ async function startServer() {
       const candidateAnswer = message || "I understand the concept.";
       const turnResult = await processTurn(sessionId, candidateAnswer);
 
-      return res.json({
+      const responsePayload: any = {
         reply: turnResult.reply,
-        done: turnResult.done,
-        feedback: turnResult.feedback,
-        sessionId,
-        stateSummary: turnResult.stateSummary
-      });
+        done: turnResult.done
+      };
+
+      if (turnResult.feedback) {
+        responsePayload.feedback = turnResult.feedback;
+      }
+
+      return res.json(responsePayload);
     } catch (err: any) {
       console.error("Error handling /api/interview:", err);
       return res.status(500).json({
