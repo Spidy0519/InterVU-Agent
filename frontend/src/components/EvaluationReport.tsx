@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FinalFeedback, InterviewState } from '../types/interview';
-import { CheckCircle2, Compass, Star } from 'lucide-react';
+import { CheckCircle2, Compass } from 'lucide-react';
 
 interface EvaluationReportProps {
   session: InterviewState;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
-import { AlertCircle, X, CheckCircle2, Star } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Star } from 'lucide-react';
 import { CandidateSelector } from './components/CandidateSelector';
 import { InterviewRules } from './components/InterviewRules';
 import { InterviewSession } from './components/InterviewSession';
@@ -284,7 +284,7 @@ export default function App() {
                           await fetch('/api/feedback', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ sessionId: session.sessionId, stars: feedbackRating, description: feedbackDesc })
+                            body: JSON.stringify({ sessionId: session?.sessionId, stars: feedbackRating, description: feedbackDesc })
                           });
                         } catch (err) {
                           console.error(err);
