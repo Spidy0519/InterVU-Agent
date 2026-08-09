@@ -4,7 +4,7 @@ import path from "path";
 import { generateContentJSON } from './geminiService';
 import { supabase } from '../../supabaseClient';
 
-const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(__dirname, "../../../data/curriculum.json"), "utf8"));
+const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, "../../../data/curriculum.json"), "utf8"));
 
 export function createInitialStrategy(candidate: Candidate) {
   const missions = candidate.missions || [];
