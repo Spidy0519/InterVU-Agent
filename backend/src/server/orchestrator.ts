@@ -188,7 +188,7 @@ Return valid JSON with these exact fields mapped properly to the schema.
     evaluatorNotes: "API fallback used. Answer was not deeply evaluated."
   };
 
-  const evaluationRaw = await generateContentJSON(evalPrompt, "You are a strict, fair technical interviewer evaluator.", fallbackEval);
+  const evaluationRaw = await generateContentJSON(evalPrompt, "You are a strict, fair technical interviewer evaluator.", fallbackEval, true);
   
   // Map raw evaluation to the DB schema exactly
   const mappedEval = {
@@ -235,12 +235,7 @@ Return valid JSON with these exact fields mapped properly to the schema.
      return {
        reply: "Thank you! We have covered all necessary areas for your AI technical assessment. I have compiled your detailed evaluation report below.",
        done: true,
-       feedback: {
-         summary: finalFeedback.summary,
-         strengths: finalFeedback.strengths,
-         gaps: finalFeedback.gaps,
-         next: finalFeedback.next
-       }
+       feedback: finalFeedback
      };
   }
 
@@ -455,7 +450,7 @@ Produce a structured final report JSON matching this exact structure:
     confidence: 0.88
   };
 
-  const generated = await generateContentJSON(prompt, "You are a senior AI technical interviewer compiling final candidate feedback.", fallbackFeedback);
+  const generated = await generateContentJSON(prompt, "You are a senior AI technical interviewer compiling final candidate feedback.", fallbackFeedback, true);
 
   // Store in DB
   await supabase.from('interview_feedback').upsert({

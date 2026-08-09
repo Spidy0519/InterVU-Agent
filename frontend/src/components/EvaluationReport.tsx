@@ -36,17 +36,12 @@ export const EvaluationReport: React.FC<EvaluationReportProps> = ({
       ?.filter((m) => !m.passed || m.skipped)
       .map((m) => m.title) || [];
 
-  // Topics candidate covered / learned (using session, report, and candidate curriculum missions)
   const learnedTopics = Array.from(
     new Set([
       ...(report.topicScores?.map((t) => t.topic) || []),
       ...(session.topicsAssessed?.map((t) => t.topic) || []),
       ...(session.history?.map((turn) => turn.question.topic) || []),
-      ...candidatePassedMissions,
-      'Vector Embeddings',
-      'Semantic Search',
-      'Embedding Dimensions',
-      'AI Engineering Fundamentals',
+      ...candidatePassedMissions
     ])
   ).filter(Boolean).slice(0, 5);
 
@@ -55,11 +50,7 @@ export const EvaluationReport: React.FC<EvaluationReportProps> = ({
     new Set([
       ...(report.next || []),
       ...(report.gaps || []),
-      ...candidateNeedsStudyMissions,
-      'Production-ready Vector Search',
-      'Embedding Optimization',
-      'Retrieval Performance',
-      'System Design for AI Applications',
+      ...candidateNeedsStudyMissions
     ])
   ).filter(Boolean).slice(0, 5);
 

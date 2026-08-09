@@ -1,17 +1,25 @@
 import { GoogleGenAI } from "@google/genai";
 
 let genAIClient: GoogleGenAI | null = null;
+let evaluatorClient: GoogleGenAI | null = null;
 
-export function getGeminiClient(): GoogleGenAI {
+export function getGeminiClient(useEvaluatorKey = false): GoogleGenAI {
+  if (useEvaluatorKey) {
+    if (!evaluatorClient) {
+      const apiKey = process.env.EVALUATOR_API_KEY || process.env.GEMINI_API_KEY || "";
+      evaluatorClient = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+      });
+    }
+    return evaluatorClient;
+  }
+
   if (!genAIClient) {
     const apiKey = process.env.GEMINI_API_KEY || "";
     genAIClient = new GoogleGenAI({
       apiKey,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
+      httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
     });
   }
   return genAIClient;
@@ -22,9 +30,10 @@ const MODELS_TO_TRY = ["gemini-3.6-flash", "gemini-flash-latest"];
 export async function generateContentJSON<T>(
   prompt: string,
   systemInstruction: string,
-  fallback: T
+  fallback: T,
+  useEvaluatorKey: boolean = false
 ): Promise<T> {
-  const ai = getGeminiClient();
+  const ai = getGeminiClient(useEvaluatorKey);
 
   for (const modelName of MODELS_TO_TRY) {
     try {
