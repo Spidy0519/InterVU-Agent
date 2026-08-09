@@ -13,7 +13,7 @@ const CURRICULUM_DATA = JSON.parse(fs.readFileSync(path.join(process.cwd(), "../
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   app.use(express.json());
 
@@ -243,13 +243,6 @@ async function startServer() {
   });
 
   // Vite middleware setup removed for standalone backend
-  if (process.env.NODE_ENV === "production") {
-    const distPath = path.join(process.cwd(), '../frontend/dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`AI Interviewer server running on http://0.0.0.0:${PORT}`);
