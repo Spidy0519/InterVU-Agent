@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
+import { AlertCircle, X } from 'lucide-react';
 import { CandidateSelector } from './components/CandidateSelector';
 import { InterviewRules } from './components/InterviewRules';
 import { InterviewSession } from './components/InterviewSession';
@@ -205,18 +206,32 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 w-full">
         <main id="app-main-content" className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6">
-          {/* Global Error Alert Banner */}
+          {/* Global Error Modal Overlay */}
           {errorMessage && (
-            <div id="app-error-banner" className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-[13.5px] flex items-center justify-between">
-              <div>
-                <strong>Error:</strong> {errorMessage}
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-rose-100 text-rose-600 rounded-full shrink-0">
+                      <AlertCircle className="w-6 h-6" />
+                    </div>
+                    <div className="pt-1 flex-1">
+                      <h3 className="text-lg font-bold text-slate-900 mb-2">Attention Required</h3>
+                      <p className="text-slate-600 text-sm leading-relaxed">
+                        {errorMessage}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-slate-50 px-6 py-4 flex justify-end border-t border-slate-100">
+                  <button
+                    onClick={() => setErrorMessage(null)}
+                    className="px-5 py-2 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 transition-colors shadow-sm text-sm flex items-center gap-2"
+                  >
+                    <span>Understand</span>
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => setErrorMessage(null)}
-                className="text-rose-600 font-semibold hover:underline"
-              >
-                Dismiss
-              </button>
             </div>
           )}
 

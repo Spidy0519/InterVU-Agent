@@ -126,6 +126,34 @@ async function startServer() {
     }
   });
 
+  // API Route: User Feedback
+  app.post("/api/feedback", async (req, res) => {
+    try {
+      const { sessionId, stars, description } = req.body;
+      const fs = require('fs');
+      const path = require('path');
+      const feedbacksFile = path.resolve(__dirname, '../../data/feedbacks.json');
+      
+      let feedbacks = [];
+      if (fs.existsSync(feedbacksFile)) {
+        feedbacks = JSON.parse(fs.readFileSync(feedbacksFile, 'utf8'));
+      }
+      
+      feedbacks.push({
+        sessionId,
+        stars,
+        description,
+        timestamp: new Date().toISOString()
+      });
+      
+      fs.writeFileSync(feedbacksFile, JSON.stringify(feedbacks, null, 2));
+      return res.json({ success: true });
+    } catch (err: any) {
+      console.error("Error saving feedback:", err);
+      res.status(500).json({ error: "Failed to save feedback" });
+    }
+  });
+
   // API Route: Force Finish Interview and Generate Feedback
   app.post("/api/interview/finish", async (req, res) => {
     try {

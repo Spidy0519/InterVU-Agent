@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FinalFeedback, InterviewState } from '../types/interview';
-import { CheckCircle2, Compass } from 'lucide-react';
+import { CheckCircle2, Compass, Star } from 'lucide-react';
 
 interface EvaluationReportProps {
   session: InterviewState;
@@ -15,6 +15,25 @@ export const EvaluationReport: React.FC<EvaluationReportProps> = ({
   const candidateName = session.candidate.member.name;
   const candidateRole = session.candidate.member.jobRole;
   const candidateId = session.candidate.member.id;
+
+  const [rating, setRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [feedbackDesc, setFeedbackDesc] = useState('');
+  const [submittedFeedback, setSubmittedFeedback] = useState(false);
+
+  const handleSubmitFeedback = async () => {
+    if (rating === 0) return;
+    try {
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: session.sessionId, stars: rating, description: feedbackDesc })
+      });
+      setSubmittedFeedback(true);
+    } catch(err) {
+      console.error(err);
+    }
+  };
 
   const overallScore = report.overallScore ?? 82;
   const confidenceVal =
@@ -156,6 +175,46 @@ export const EvaluationReport: React.FC<EvaluationReportProps> = ({
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* Feedback Section */}
+      <div className="w-full bg-white p-8 sm:p-10 rounded-2xl border border-slate-200/80 shadow-2xs mt-6">
+        <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-4">Rate Your Interview Experience</h3>
+        {submittedFeedback ? (
+          <p className="text-emerald-600 font-medium flex items-center gap-2"><CheckCircle2 className="w-5 h-5"/> Thank you for your feedback!</p>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className="focus:outline-none transition-transform hover:scale-110"
+                >
+                  <Star className={`w-8 h-8 ${star <= (hoverRating || rating) ? 'fill-yellow-400 text-yellow-400' : 'text-slate-200'}`} />
+                </button>
+              ))}
+            </div>
+            <textarea
+              className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none text-slate-700 bg-slate-50"
+              placeholder="Any additional feedback? (Optional)"
+              rows={3}
+              value={feedbackDesc}
+              onChange={(e) => setFeedbackDesc(e.target.value)}
+            />
+            <div>
+              <button
+                disabled={rating === 0}
+                onClick={handleSubmitFeedback}
+                className="px-6 py-2.5 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                Submit Feedback
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
