@@ -16,6 +16,7 @@
     "type": "module",
     "dependencies": {
         "@google/genai": "^2.4.0",
+        "@supabase/supabase-js": "^2.112.2",
         "dotenv": "^17.2.3",
         "express": "^4.21.2"
     },
